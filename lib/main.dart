@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'Daleel',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // يتبع نظام الجهاز تلقائياً
+      themeMode: ThemeMode.system, 
       home: const Splash1(),
     );
   }
