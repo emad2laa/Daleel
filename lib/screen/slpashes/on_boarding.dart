@@ -1,5 +1,5 @@
 
-import 'package:daleel/home_page.dart';
+import 'package:daleel/screen/auth/auth_screen.dart';
 import 'package:daleel/widgets/onboarding_page_content.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
@@ -17,7 +17,7 @@ class Splash2 extends StatelessWidget {
     // انتقل للصفحة الرئيسية
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HomePage()),
+      MaterialPageRoute(builder: (context) => const AuthScreen()),
     );
   }
 

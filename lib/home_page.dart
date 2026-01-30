@@ -1,10 +1,940 @@
+import 'package:daleel/profile_screen.dart';
+import 'package:daleel/save_screen.dart';
+import 'package:daleel/discover_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  final String? userName;
+  
+  const HomePage({
+    super.key,
+    this.userName,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return const Placeholder();
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocusNode = FocusNode();
+  
+  late String userName;
+  bool _isSearchExpanded = false;
+  int _selectedBottomIndex = 0;
+  
+  int completedSteps = 5;
+  int totalSteps = 5;
+  
+  final List<PopularService> _popularServices = [
+    PopularService(
+      title: "شراء سيارة جديدة بالتقسيط",
+      rating: 4.8,
+      reviewCount: 10000,
+      location: "بواسطة عمر وحيد",
+      source: "مصدر موثوق",
+      isFeatured: true,
+    ),
+    PopularService(
+      title: "شراء سيارة جديدة بالتقسيط",
+      rating: 4.8,
+      reviewCount: 10000,
+      location: "بواسطة عمر وحيد",
+      source: "مصدر موثوق",
+      isFeatured: true,
+    ),
+    PopularService(
+      title: "شراء سيارة جديدة بالتقسيط",
+      rating: 4.8,
+      reviewCount: 10000,
+      location: "بواسطة عمر وحيد",
+      source: "مصدر موثوق",
+      isFeatured: true,
+    ),
+  ];
+  
+  @override
+  void initState() {
+    super.initState();
+    userName = widget.userName ?? "عماد";
+    
+    _searchFocusNode.addListener(() {
+      setState(() {
+        _isSearchExpanded = _searchFocusNode.hasFocus;
+      });
+    });
   }
+  
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _onNavItemTapped(int index) {
+    setState(() {
+      _selectedBottomIndex = index;
+    });
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          // تحديد اتجاه الانزلاق بناءً على الصفحة السابقة والحالية
+          final offsetAnimation = Tween<Offset>(
+            begin: const Offset(1.0, 0.0), // من اليمين
+            end: Offset.zero,
+          ).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOut,
+          ));
+          
+          return SlideTransition(
+            position: offsetAnimation,
+            child: child,
+          );
+        },
+        child: IndexedStack(
+          key: ValueKey<int>(_selectedBottomIndex),
+          index: _selectedBottomIndex,
+          children: [
+            _buildHomeContent(),
+            const SaveScreen(),
+            const DiscoverScreen(),
+            const ProfileScreen(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildHomeContent() {
+    return SafeArea(
+      child: Column(
+        children: [
+          _buildHeader(),
+          _buildSearchBar(),
+          
+          Expanded(
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  _buildTripsSection(),
+                  const SizedBox(height: 30),
+                  _buildDiscoverSection(),
+                  const SizedBox(height: 30),
+                  _buildPopularSection(),
+                  const SizedBox(height: 100),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            userName,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF379777),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'مرحبا',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildSearchBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _isSearchExpanded 
+                      ? const Color(0xFF379777) 
+                      : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _isSearchExpanded = true;
+                        });
+                      },
+                      child: Icon(
+                        Icons.search,
+                        color: Colors.grey.shade600,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'تجديد بطاقة، رخصة، قيد عائلي   ابحث عن مشوارك',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 13,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          if (_isSearchExpanded)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'نتائج البحث',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSearchResult('تجديد البطاقة الشخصية'),
+                  _buildSearchResult('تجديد رخصة القيادة'),
+                  _buildSearchResult('استخراج قيد عائلي'),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildSearchResult(String title) {
+    return InkWell(
+      onTap: () {
+        // Handle search result tap
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Icon(
+              Icons.search,
+              size: 18,
+              color: Colors.grey.shade500,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildTripsSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _AnimatedButton(
+                text: 'اضافة مشوار',
+                onTap: () {},
+              ),
+              Text(
+                'مشاويري',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          _AnimatedCard(
+            onTap: () {},
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        width: 70,
+                        height: 70,
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: SizedBox(
+                                width: 70,
+                                height: 70,
+                                child: CircularProgressIndicator(
+                                  value: completedSteps / totalSteps,
+                                  strokeWidth: 6,
+                                  backgroundColor: const Color(0xFFE8F5E9),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF379777),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Center(
+                              child: Text(
+                                '$completedSteps/$totalSteps',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF379777),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'مسوغات العمل',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'اليوم الأربعاء 5 مايو',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? const Color(0xFF2A2A2A) 
+                          : const Color(0xFFF8F8F8),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '٥. بيريت التأمينات - مكتب التأمينات',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildDiscoverSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            'اكتشف مشاوير جديدة',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.85,
+            children: [
+              _buildServiceCard('الجيش', 'assets/icons/army.svg'),
+              _buildServiceCard('التخرج الجامعي', 'assets/icons/graduation.svg'),
+              _buildServiceCard('السفر للخارج', 'assets/icons/Container-4.svg'),
+              _buildServiceCard('الزواج', 'assets/icons/Component 1.svg'),
+              _buildServiceCard('ترخيص السيارات', 'assets/icons/car_license.svg'),
+              _buildServiceCard('المزيد', null, isMore: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildServiceCard(String title, String? svgPath, {bool isMore = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return _ClickableServiceCard(
+      onTap: () {},
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: isMore 
+                  ? (isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100)
+                  : const Color(0xFFB2E4D0).withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: isMore 
+                  ? const Icon(
+                      Icons.more_horiz,
+                      size: 28,
+                      color: Color(0xFF379777),
+                    )
+                  : SvgPicture.asset(
+                      svgPath!,
+                      width: 28,
+                      height: 28,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF379777),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildPopularSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _AnimatedButton(
+                text: 'اظهار الكل',
+                onTap: () {},
+              ),
+              Text(
+                'الأكثر شيوعاً',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _popularServices.length,
+            itemBuilder: (context, index) {
+              return _buildPopularServiceCard(_popularServices[index]);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildPopularServiceCard(PopularService service) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return _AnimatedCard(
+      onTap: () {},
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '(${_formatReviewCount(service.reviewCount)} حضور)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      service.rating.toString(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.star,
+                      color: Color(0xFF379777),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 12),
+            
+            Text(
+              service.title,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                height: 1.4,
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (service.source.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      service.source,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Row(
+                  children: [
+                    Text(
+                      service.location,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.circle,
+                      color: Color(0xFF379777),
+                      size: 8,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  String _formatReviewCount(int count) {
+    if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(0)}K+';
+    }
+    return count.toString();
+  }
+  
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem('assets/icons/profile.svg', 'ملفي', 3),
+              _buildNavItem('assets/icons/Property 1=Component 2.svg', 'اكتشف', 2),
+              _buildNavItem('assets/icons/Bookmark.svg', 'مشاويري', 1),
+              _buildNavItem('assets/icons/home.svg', 'الرئيسية', 0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildNavItem(String svgPath, String label, int index) {
+    final isActive = _selectedBottomIndex == index;
+    
+    return InkWell(
+      onTap: () => _onNavItemTapped(index),
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive 
+              ? const Color(0xFF379777).withOpacity(0.1) 
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SvgPicture.asset(
+              svgPath,
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                isActive ? const Color(0xFF379777) : Colors.grey.shade600,
+                BlendMode.srcIn,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isActive ? const Color(0xFF379777) : Colors.grey.shade600,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedButton extends StatefulWidget {
+  final String text;
+  final VoidCallback onTap;
+  
+  const _AnimatedButton({
+    required this.text,
+    required this.onTap,
+  });
+  
+  @override
+  State<_AnimatedButton> createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<_AnimatedButton> {
+  bool _isPressed = false;
+  
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: _isPressed 
+              ? const Color(0xFF379777) 
+              : const Color(0xFFB2E4D0),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: _isPressed ? [] : [
+            BoxShadow(
+              color: const Color(0xFF379777).withOpacity(0.25),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Text(
+          widget.text,
+          style: TextStyle(
+            color: _isPressed ? Colors.white : const Color(0xFF379777),
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final EdgeInsetsGeometry? margin;
+  
+  const _AnimatedCard({
+    required this.child,
+    this.onTap,
+    this.margin,
+  });
+  
+  @override
+  State<_AnimatedCard> createState() => _AnimatedCardState();
+}
+
+class _AnimatedCardState extends State<_AnimatedCard> {
+  bool _isPressed = false;
+  
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onTap != null ? (_) => setState(() => _isPressed = true) : null,
+      onTapUp: widget.onTap != null ? (_) {
+        setState(() => _isPressed = false);
+        widget.onTap!();
+      } : null,
+      onTapCancel: widget.onTap != null ? () => setState(() => _isPressed = false) : null,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          margin: widget.margin,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: _isPressed 
+                    ? const Color(0xFF379777).withOpacity(0.2)
+                    : Colors.black.withOpacity(0.08),
+                blurRadius: _isPressed ? 16 : 12,
+                offset: Offset(0, _isPressed ? 6 : 4),
+              ),
+            ],
+          ),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+class _ClickableServiceCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  
+  const _ClickableServiceCard({
+    required this.child,
+    required this.onTap,
+  });
+  
+  @override
+  State<_ClickableServiceCard> createState() => _ClickableServiceCardState();
+}
+
+class _ClickableServiceCardState extends State<_ClickableServiceCard> {
+  bool _isPressed = false;
+  
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.92 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOut,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: _isPressed 
+                    ? const Color(0xFF379777).withOpacity(0.15)
+                    : Colors.black.withOpacity(0.06),
+                blurRadius: _isPressed ? 12 : 8,
+                offset: Offset(0, _isPressed ? 4 : 2),
+              ),
+            ],
+          ),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+class PopularService {
+  final String title;
+  final double rating;
+  final int reviewCount;
+  final String location;
+  final String source;
+  final bool isFeatured;
+  
+  PopularService({
+    required this.title,
+    required this.rating,
+    required this.reviewCount,
+    required this.location,
+    required this.source,
+    this.isFeatured = false,
+  });
 }

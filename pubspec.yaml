@@ -17,6 +17,8 @@ dependencies:
   introduction_screen: ^4.0.0
   shared_preferences: ^2.5.4
   flutter_launcher_icons: ^0.14.4
+  intl: ^0.20.2
+  provider: ^6.1.5+1
 
 flutter_launcher_icons:
   android: true
@@ -35,6 +37,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/icons/
 
   fonts:
     - family: Cairo
