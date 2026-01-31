@@ -1,4 +1,9 @@
+import 'package:daleel/providers/app_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'service_details_screen.dart';
+import 'dart:ui';
+
 
 class SaveScreen extends StatefulWidget {
   const SaveScreen({super.key});
@@ -8,59 +13,30 @@ class SaveScreen extends StatefulWidget {
 }
 
 class _SaveScreenState extends State<SaveScreen> {
-  // Mock Data للمشاوير
-  final List<Trip> _trips = [
-    Trip(
-      title: 'مسوغات العمل',
-      date: 'الأربعاء 5 مايو',
-      completedSteps: 1,
-      totalSteps: 5,
-      currentStep: '٥. بيريت التأمينات - مكتب التأمينات',
-    ),
-    Trip(
-      title: 'مسوغات العمل',
-      date: 'الأربعاء 5 مايو',
-      completedSteps: 3,
-      totalSteps: 5,
-      currentStep: '٥. بيريت التأمينات - مكتب التأمينات',
-    ),
-    Trip(
-      title: 'مسوغات العمل',
-      date: 'الأربعاء 5 مايو',
-      completedSteps: 5,
-      totalSteps: 5,
-      currentStep: '٥. بيريت التأمينات - مكتب التأمينات',
-    ),
-    Trip(
-      title: 'مسوغات العمل',
-      date: 'الأربعاء 5 مايو',
-      completedSteps: 5,
-      totalSteps: 5,
-      currentStep: '٥. بيريت التأمينات - مكتب التأمينات',
-    ),
-    Trip(
-      title: 'مسوغات العمل',
-      date: 'الأربعاء 5 مايو',
-      completedSteps: 2,
-      totalSteps: 5,
-      currentStep: '٥. بيريت التأمينات - مكتب التأمينات',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // 👈 Theme
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                itemCount: _trips.length,
-                itemBuilder: (context, index) {
-                  return _buildTripCard(_trips[index], index);
+              child: Consumer<TripsProvider>(
+                builder: (context, tripsProvider, child) {
+                  final trips = tripsProvider.savedTrips;
+                  
+                  if (trips.isEmpty) {
+                    return _buildEmptyState();
+                  }
+                  
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    itemCount: trips.length,
+                    itemBuilder: (context, index) {
+                      return _buildTripCard(trips[index], index);
+                    },
+                  );
                 },
               ),
             ),
@@ -74,23 +50,53 @@ class _SaveScreenState extends State<SaveScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // زر إضافة مشوار مع الأنيميشن
-          _AnimatedButton(
-            text: 'اضافة مشوار',
-            onTap: () {
-              // TODO: إضافة مشوار جديد
-            },
-          ),
-
-          // العنوان
           Text(
             'مشاويري',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyLarge?.color, // 👈 Theme
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: const Color(0xFF379777).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.bookmark_border,
+              size: 80,
+              color: Color(0xFF379777),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'لا توجد مشاوير محفوظة',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'ابحث عن الخدمات واحفظها هنا',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
             ),
           ),
         ],
@@ -101,13 +107,29 @@ class _SaveScreenState extends State<SaveScreen> {
   Widget _buildTripCard(Trip trip, int index) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
+    // جلب الخطوات الفعلية للخدمة
+    final actualSteps = ServiceDetailsData.getStepsForService(trip.title);
+    final totalSteps = actualSteps.length;
+    final completedSteps = actualSteps.where((step) => step.isCompleted).length;
+    
     return _AnimatedCard(
       onTap: () {
-        // TODO: فتح تفاصيل المشوار
+        // فتح تفاصيل الخدمة
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ServiceDetailsScreen(
+              serviceTitle: trip.title,
+              serviceDescription: trip.category,
+              steps: actualSteps,
+              comments: ServiceDetailsData.getMockComments(),
+            ),
+          ),
+        );
       },
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // الصف الأول: العنوان والدائرة
@@ -116,17 +138,19 @@ class _SaveScreenState extends State<SaveScreen> {
               children: [
                 // دائرة التقدم
                 SizedBox(
-                  width: 70,
-                  height: 70,
+                  width: 60,
+                  height: 60,
                   child: Stack(
                     children: [
                       Center(
                         child: SizedBox(
-                          width: 70,
-                          height: 70,
+                          width: 60,
+                          height: 60,
                           child: CircularProgressIndicator(
-                            value: trip.completedSteps / trip.totalSteps,
-                            strokeWidth: 6,
+                            value: totalSteps > 0 
+                                ? completedSteps / totalSteps 
+                                : 0.0,
+                            strokeWidth: 5,
                             backgroundColor: const Color(0xFFE8F5E9),
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               Color(0xFF379777),
@@ -136,9 +160,9 @@ class _SaveScreenState extends State<SaveScreen> {
                       ),
                       Center(
                         child: Text(
-                          '${trip.completedSteps}/${trip.totalSteps}',
+                          '$completedSteps/$totalSteps',
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF379777),
                           ),
@@ -151,23 +175,23 @@ class _SaveScreenState extends State<SaveScreen> {
                 // العنوان والتاريخ
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(right: 16),
+                    padding: const EdgeInsets.only(right: 12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           trip.title,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).textTheme.bodyLarge?.color, // 👈 Theme
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 3),
                         Text(
                           trip.date,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.grey.shade500,
                           ),
                         ),
@@ -178,25 +202,38 @@ class _SaveScreenState extends State<SaveScreen> {
               ],
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // الخطوة الحالية
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F8F8), // 👈 Theme
-                borderRadius: BorderRadius.circular(10),
+                color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // زر الحذف
+                  InkWell(
+                    onTap: () => _showDeleteDialog(trip),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      child: Icon(
+                        Icons.delete_outline,
+                        color: Colors.red.shade400,
+                        size: 18,
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: Text(
                       trip.currentStep,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7), // 👈 Theme
+                        fontSize: 12,
+                        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.6),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -209,58 +246,150 @@ class _SaveScreenState extends State<SaveScreen> {
       ),
     );
   }
-}
 
-// 👇 نفس الـ Animated Widgets من HomePage
-
-class _AnimatedButton extends StatefulWidget {
-  final String text;
-  final VoidCallback onTap;
-  
-  const _AnimatedButton({
-    required this.text,
-    required this.onTap,
-  });
-  
-  @override
-  State<_AnimatedButton> createState() => _AnimatedButtonState();
-}
-
-class _AnimatedButtonState extends State<_AnimatedButton> {
-  bool _isPressed = false;
-  
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: _isPressed 
-              ? const Color(0xFF379777) 
-              : const Color(0xFFB2E4D0),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: _isPressed ? [] : [
-            BoxShadow(
-              color: const Color(0xFF379777).withOpacity(0.25),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+  void _showDeleteDialog(Trip trip) {
+    showDialog(
+      context: context,
+      barrierDismissible: true, // يقفل لما يضغط برا
+      barrierColor: Colors.black.withOpacity(0.3), // خلفية شفافة للـ blur
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8), // تأثير الضبابية
+        child: AlertDialog(
+          backgroundColor: Theme.of(context).cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: const Color(0xFF379777).withOpacity(0.1),
+              width: 1,
+            ),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          title: Column(
+            children: [
+              // أيقونة تحذير بلون التطبيق
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.red.shade500,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'حذف المشوار',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'هل أنت متأكد من حذف هذا المشوار؟',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'لن تتمكن من استرجاعه مرة أخرى',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.all(20),
+          actions: [
+            Row(
+              children: [
+                // زر الإلغاء
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: const Color(0xFF379777).withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'إلغاء',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF379777),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // زر الحذف
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Provider.of<TripsProvider>(context, listen: false).removeTrip(trip.id);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.check_circle, color: Colors.white, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'تم حذف المشوار',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: const Color(0xFF379777),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                          margin: const EdgeInsets.all(16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Colors.red.shade500,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'حذف',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-        child: Text(
-          widget.text,
-          style: TextStyle(
-            color: _isPressed ? Colors.white : const Color(0xFF379777),
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-          ),
         ),
       ),
     );
@@ -300,7 +429,7 @@ class _AnimatedCardState extends State<_AnimatedCard> {
         child: Container(
           margin: widget.margin,
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor, // 👈 Theme
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -317,21 +446,4 @@ class _AnimatedCardState extends State<_AnimatedCard> {
       ),
     );
   }
-}
-
-// Model للمشوار
-class Trip {
-  final String title;
-  final String date;
-  final int completedSteps;
-  final int totalSteps;
-  final String currentStep;
-
-  Trip({
-    required this.title,
-    required this.date,
-    required this.completedSteps,
-    required this.totalSteps,
-    required this.currentStep,
-  });
 }

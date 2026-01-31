@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'category_services_screen.dart';
 
 class DiscoverScreen extends StatefulWidget {
-  const DiscoverScreen({super.key});
+  final String? userName;
+  
+  const DiscoverScreen({
+    super.key,
+    this.userName,
+  });
 
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -214,7 +220,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Widget _buildSearchResult(String title) {
     return InkWell(
       onTap: () {
-        // Handle search result tap
+        // التعامل مع اختيار نتيجة البحث  
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -271,7 +277,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Widget _buildCategoryCard(ServiceCategory category) {
     return _AnimatedCategoryCard(
       onTap: () {
-        // TODO: الانتقال لصفحة تفاصيل الفئة
+        // الانتقال لصفحة الخدمات
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryServicesScreen(
+              categoryTitle: category.title,
+              categoryIcon: category.iconPath,
+              userName: widget.userName ?? "",
+            ),
+          ),
+        );
       },
       child: Container(
         decoration: BoxDecoration(

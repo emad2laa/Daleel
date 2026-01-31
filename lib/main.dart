@@ -1,4 +1,5 @@
 import 'package:daleel/core/themes/app_theme.dart';
+import 'package:daleel/providers/app_provider.dart';
 import 'package:daleel/providers/theme_provider.dart';
 import 'package:daleel/screen/slpashes/splash_1.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,12 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => ServicesProvider()),
+        ChangeNotifierProvider(create: (_) => TripsProvider()),    
+      ],
       child: const MyApp(),
     ),
   );

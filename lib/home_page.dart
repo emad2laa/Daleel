@@ -1,6 +1,10 @@
+import 'package:daleel/add_trip_screen.dart';
 import 'package:daleel/profile_screen.dart';
 import 'package:daleel/save_screen.dart';
 import 'package:daleel/discover_screen.dart';
+import 'package:daleel/search_results_screen.dart';
+import 'package:daleel/popular_services_screen.dart';
+import 'package:daleel/category_services_screen.dart'; // أضف هذا
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -22,7 +26,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final FocusNode _searchFocusNode = FocusNode();
   
   late String userName;
-  bool _isSearchExpanded = false;
   int _selectedBottomIndex = 0;
   
   int completedSteps = 5;
@@ -59,12 +62,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     userName = widget.userName ?? "عماد";
-    
-    _searchFocusNode.addListener(() {
-      setState(() {
-        _isSearchExpanded = _searchFocusNode.hasFocus;
-      });
-    });
   }
   
   @override
@@ -80,6 +77,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _selectedBottomIndex = index;
     });
   }
+
+  void _openSearch() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchResultsScreen(
+          initialQuery: _searchController.text,
+        ),
+      ),
+    );
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -90,9 +98,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         switchInCurve: Curves.easeInOut,
         switchOutCurve: Curves.easeInOut,
         transitionBuilder: (Widget child, Animation<double> animation) {
-          // تحديد اتجاه الانزلاق بناءً على الصفحة السابقة والحالية
           final offsetAnimation = Tween<Offset>(
-            begin: const Offset(1.0, 0.0), // من اليمين
+            begin: const Offset(1.0, 0.0),
             end: Offset.zero,
           ).animate(CurvedAnimation(
             parent: animation,
@@ -110,7 +117,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             _buildHomeContent(),
             const SaveScreen(),
-            const DiscoverScreen(),
+            DiscoverScreen(userName: userName), // بعت userName
             const ProfileScreen(),
           ],
         ),
@@ -180,143 +187,53 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          Container(
+      child: GestureDetector(
+        onTap: _openSearch,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Container(
             decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+            ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Icon(
+                    Icons.search,
+                    color: Colors.grey.shade600,
+                    size: 22,
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    child: Text(
+                      'تجديد بطاقة، رخصة، قيد عائلي   ابحث عن مشوارك',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _isSearchExpanded 
-                      ? const Color(0xFF379777) 
-                      : Colors.transparent,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          _isSearchExpanded = true;
-                        });
-                      },
-                      child: Icon(
-                        Icons.search,
-                        color: Colors.grey.shade600,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'تجديد بطاقة، رخصة، قيد عائلي   ابحث عن مشوارك',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 13,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
-          
-          if (_isSearchExpanded)
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'نتائج البحث',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSearchResult('تجديد البطاقة الشخصية'),
-                  _buildSearchResult('تجديد رخصة القيادة'),
-                  _buildSearchResult('استخراج قيد عائلي'),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildSearchResult(String title) {
-    return InkWell(
-      onTap: () {
-        // Handle search result tap
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.8),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Icon(
-              Icons.search,
-              size: 18,
-              color: Colors.grey.shade500,
-            ),
-          ],
         ),
       ),
     );
@@ -332,7 +249,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             children: [
               _AnimatedButton(
                 text: 'اضافة مشوار',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddTripScreen(
+                        userName: userName,
+                      ),
+                    ),
+                  );
+                },
               ),
               Text(
                 'مشاويري',
@@ -479,7 +405,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               _buildServiceCard('السفر للخارج', 'assets/icons/Container-4.svg'),
               _buildServiceCard('الزواج', 'assets/icons/Component 1.svg'),
               _buildServiceCard('ترخيص السيارات', 'assets/icons/car_license.svg'),
-              _buildServiceCard('المزيد', null, isMore: true),
+              _buildServiceCard('المرور', 'assets/icons/Container-12.svg'),
             ],
           ),
         ],
@@ -491,7 +417,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return _ClickableServiceCard(
-      onTap: () {},
+      onTap: () {
+        // فتح صفحة الخدمات حسب القسم
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryServicesScreen(
+              categoryTitle: title,
+              categoryIcon: svgPath ?? 'assets/icons/more.svg',
+              userName: userName,
+            ),
+          ),
+        );
+      },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -553,7 +491,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             children: [
               _AnimatedButton(
                 text: 'اظهار الكل',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PopularServicesScreen(),
+                    ),
+                  );
+                },
               ),
               Text(
                 'الأكثر شيوعاً',
