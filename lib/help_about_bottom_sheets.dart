@@ -217,13 +217,29 @@ void showHelpBottomSheet(BuildContext context) {
                   query: 'subject=طلب مساعدة - تطبيق دليل',
                 );
 
-                if (await canLaunchUrl(emailUri)) {
-                  await launchUrl(emailUri);
-                } else {
+                try {
+                  final canLaunch = await canLaunchUrl(emailUri);
+                  if (canLaunch) {
+                    await launchUrl(emailUri);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('لا يمكن فتح تطبيق البريد الإلكتروني'),
+                          backgroundColor: Colors.red.shade600,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('لا يمكن فتح تطبيق البريد الإلكتروني'),
+                        content: const Text('حدث خطأ أثناء فتح البريد الإلكتروني'),
                         backgroundColor: Colors.red.shade600,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
@@ -458,29 +474,93 @@ void showAboutBottomSheet(BuildContext context) {
 
           const SizedBox(height: 20),
 
-          // زر فتح التوثيق
+          // زر فتح التوثيق - معدّل مع معالجة أفضل للأخطاء
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
               onPressed: () async {
-                final Uri docsUrl = Uri.parse('https://docs.daleel.com');
-
-                if (await canLaunchUrl(docsUrl)) {
-                  await launchUrl(
-                    docsUrl,
+                final url = 'https://daleel-csi.netlify.app/';
+                
+                try {
+                  final uri = Uri.parse(url);
+                  
+                  // محاولة فتح الرابط
+                  bool launched = await launchUrl(
+                    uri,
                     mode: LaunchMode.externalApplication,
                   );
-                } else {
-                  if (context.mounted) {
+                  
+                  // لو ما نفعش، جرب بدون mode
+                  if (!launched) {
+                    launched = await launchUrl(uri);
+                  }
+                  
+                  // لو لسه ما نفعش، اعرض رسالة مع خيار النسخ
+                  if (!launched && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('لا يمكن فتح الرابط'),
+                        content: const Text('مش قادر أفتح الرابط - جرب تنسخه وتفتحه بنفسك'),
+                        action: SnackBarAction(
+                          label: 'نسخ',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: url));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Colors.white),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'تم نسخ الرابط',
+                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: const Color(0xFF379777),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                margin: const EdgeInsets.all(16),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
                         backgroundColor: Colors.red.shade600,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        margin: const EdgeInsets.all(16),
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  // في حالة حدوث خطأ
+                  debugPrint('Error launching URL: $e');
+                  
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('حصل خطأ: ${e.toString()}'),
+                        action: SnackBarAction(
+                          label: 'نسخ الرابط',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: url));
+                          },
+                        ),
+                        backgroundColor: Colors.red.shade600,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        margin: const EdgeInsets.all(16),
+                        duration: const Duration(seconds: 4),
                       ),
                     );
                   }
