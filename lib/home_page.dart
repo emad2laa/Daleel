@@ -6,6 +6,7 @@ import 'package:daleel/search_results_screen.dart';
 import 'package:daleel/popular_services_screen.dart';
 import 'package:daleel/category_services_screen.dart';
 import 'package:daleel/notifications_screen.dart';
+import 'package:daleel/ai_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -127,6 +128,42 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(),
+      floatingActionButton: _selectedBottomIndex == 0
+          ? _buildAIChatFAB()
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+    );
+  }
+
+  Widget _buildAIChatFAB() {
+    return FloatingActionButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AIChatScreen(),
+          ),
+        );
+      },
+      backgroundColor: const Color(0xFF379777),
+      elevation: 6,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF379777), Color(0xFF4CAF88)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.chat_bubble_rounded,
+          color: Colors.white,
+          size: 26,
+        ),
+      ),
     );
   }
 
