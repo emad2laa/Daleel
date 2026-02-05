@@ -1,5 +1,6 @@
 import 'package:daleel/providers/app_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'service_details_screen.dart';
 import 'dart:ui';
@@ -76,9 +77,8 @@ class _SaveScreenState extends State<SaveScreen> {
               color: const Color(0xFF379777).withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.bookmark_border,
-              size: 80,
+            child:SvgPicture.asset(
+              'assets/icons/Bookmark.svg',
               color: Color(0xFF379777),
             ),
           ),
@@ -220,10 +220,11 @@ class _SaveScreenState extends State<SaveScreen> {
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: Colors.red.shade400,
-                        size: 18,
+                      child: SvgPicture.asset(
+                        'assets/icons/bookmark-minus-02.svg',
+                        width: 18,
+                        height: 18,
+                        
                       ),
                     ),
                   ),

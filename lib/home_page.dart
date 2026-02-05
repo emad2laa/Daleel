@@ -4,7 +4,8 @@ import 'package:daleel/save_screen.dart';
 import 'package:daleel/discover_screen.dart';
 import 'package:daleel/search_results_screen.dart';
 import 'package:daleel/popular_services_screen.dart';
-import 'package:daleel/category_services_screen.dart'; // أضف هذا
+import 'package:daleel/category_services_screen.dart';
+import 'package:daleel/notifications_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -27,6 +28,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   
   late String userName;
   int _selectedBottomIndex = 0;
+  
+  // Notifications state
+  int _unreadNotificationsCount = 3;
   
   int completedSteps = 5;
   int totalSteps = 5;
@@ -117,7 +121,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             _buildHomeContent(),
             const SaveScreen(),
-            DiscoverScreen(userName: userName), // بعت userName
+            DiscoverScreen(userName: userName),
             const ProfileScreen(),
           ],
         ),
@@ -158,26 +162,110 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            userName,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF379777),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'مرحبا',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            ),
+          // Notification bell icon
+          _buildNotificationBell(),
+          // Greeting
+          Row(
+            children: [
+              Text(
+                userName,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF379777),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'مرحبا',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildNotificationBell() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasNotifications = _unreadNotificationsCount > 0;
+    
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const NotificationsScreen(),
+          ),
+        ).then((_) {
+          setState(() {
+            _unreadNotificationsCount = 0;
+          });
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SvgPicture.asset(
+              'assets/icons/notification.svg', 
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                hasNotifications 
+                    ? const Color(0xFF379777) 
+                    : (isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                BlendMode.srcIn,
+              ),
+            ),
+            // Badge
+            if (hasNotifications)
+              Positioned(
+                right: -6,
+                top: -6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE57373),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      width: 1.5,
+                    ),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 18,
+                    minHeight: 18,
+                  ),
+                  child: Center(
+                    child: Text(
+                      _unreadNotificationsCount > 9
+                          ? '9+'
+                          : _unreadNotificationsCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -209,10 +297,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(12.0),
-                  child: Icon(
-                    Icons.search,
-                    color: Colors.grey.shade600,
-                    size: 22,
+                  child: SvgPicture.asset(
+                    'assets/icons/search.svg',
+                    width: 22,
+                    height: 22,
+                    colorFilter: ColorFilter.mode(
+                      Colors.grey.shade600,
+                      BlendMode.srcIn,
+                    ),
+                    // في حالة فشل تحميل SVG، استخدم Icon
+                    placeholderBuilder: (context) => Icon(
+                      Icons.search,
+                      color: Colors.grey.shade600,
+                      size: 22,
+                    ),
                   ),
                 ),
                 Expanded(

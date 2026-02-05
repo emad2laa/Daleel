@@ -205,11 +205,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(12.0),
-                      child: Icon(
-                        Icons.search,
-                        color: Colors.grey.shade600,
-                        size: 22,
-                      ),
+                      child:             SvgPicture.asset(
+                    'assets/icons/search.svg',
+                    width: 22,
+                    height: 22,
+                    colorFilter: ColorFilter.mode(
+                      Colors.grey.shade600,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                     ),
                     Expanded(
                       child: TextField(
@@ -271,11 +275,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            SvgPicture.asset(
+                    'assets/icons/search.svg',
+                    width: 22,
+                    height: 22,
+                    colorFilter: ColorFilter.mode(
+                      Colors.grey.shade600,
+                      BlendMode.srcIn,
+                    ),
+                  ),
             const SizedBox(height: 16),
             Text(
               'ابدأ البحث عن الخدمة',

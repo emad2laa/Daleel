@@ -67,6 +67,15 @@ class ThemeProvider extends ChangeNotifier {
             borderSide: const BorderSide(color: Color(0xFF379777), width: 2),
           ),
         ),
+        
+        // Scrollbar Theme
+        scrollbarTheme: ScrollbarThemeData(
+          thumbColor: WidgetStateProperty.all(const Color(0xFF379777).withOpacity(0.7)),
+          trackColor: WidgetStateProperty.all(Colors.grey.shade200),
+          radius: const Radius.circular(10),
+          thickness: WidgetStateProperty.all(6),
+          thumbVisibility: WidgetStateProperty.all(false),
+        ),
       );
 
   // الثيم الداكن
@@ -239,6 +248,15 @@ class ThemeProvider extends ChangeNotifier {
           cursorColor: const Color(0xFF379777),
           selectionColor: const Color(0xFF379777).withOpacity(0.3),
           selectionHandleColor: const Color(0xFF379777),
+        ),
+        
+        // Scrollbar Theme للـ Dark Mode
+        scrollbarTheme: ScrollbarThemeData(
+          thumbColor: WidgetStateProperty.all(const Color(0xFF379777).withOpacity(0.7)),
+          trackColor: WidgetStateProperty.all(const Color(0xFF404040)),
+          radius: const Radius.circular(10),
+          thickness: WidgetStateProperty.all(6),
+          thumbVisibility: WidgetStateProperty.all(false),
         ),
         
         // Text Theme

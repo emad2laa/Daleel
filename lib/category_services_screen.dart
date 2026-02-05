@@ -256,10 +256,16 @@ class _CategoryServicesScreenState extends State<CategoryServicesScreen>
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(
-                              isSaved ? Icons.bookmark : Icons.bookmark_border,
-                              color: const Color(0xFF379777),
-                              size: 22,
+                            child: SvgPicture.asset(
+                              isSaved 
+                                  ? 'assets/icons/Bookmark.svg' 
+                                  : 'assets/icons/bookmark-add-02.svg',
+                              width: 22,
+                              height: 22,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF379777),
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                         );

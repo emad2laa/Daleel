@@ -1,6 +1,10 @@
 import 'dart:ui';
+import 'package:daleel/account_screen.dart';
+import 'package:daleel/help_about_bottom_sheets.dart';
 import 'package:daleel/providers/theme_provider.dart';
+import 'package:daleel/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,7 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // 👈 Theme
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -83,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: const Color(0xFF379777),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: Theme.of(context).scaffoldBackgroundColor, // 👈 Theme
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         width: 2,
                       ),
                       boxShadow: [
@@ -113,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyLarge?.color, // 👈 Theme
+              color: Theme.of(context).textTheme.bodyLarge?.color,
             ),
           ),
 
@@ -140,20 +144,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // الحساب
           _buildMenuItem(
             title: 'الحساب',
-            icon: Icons.person_outline,
+            iconPath: 'assets/icons/user.svg',
             onTap: () {
-              // TODO: Navigate to account settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AccountScreen(),
+                ),
+              );
             },
           ),
 
           const SizedBox(height: 12),
 
-          // تعديل الحساب
+          // الإعدادات
           _buildMenuItem(
-            title: 'تعديل الحساب',
-            icon: Icons.edit_outlined,
+            title: 'الإعدادات',
+            iconPath: 'assets/icons/setting-02.svg',
             onTap: () {
-              // TODO: Navigate to edit account
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
             },
           ),
 
@@ -162,7 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // الإشعارات مع Toggle
           _buildToggleMenuItem(
             title: 'الإشعارات',
-            icon: Icons.notifications_outlined,
+            iconPath: 'assets/icons/notification.svg',
             value: _notificationsEnabled,
             onChanged: (value) {
               setState(() {
@@ -176,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // الوضع الليلي مع Toggle
           _buildToggleMenuItem(
             title: 'الوضع الليلي',
-            icon: Icons.dark_mode_outlined,
+            iconPath: 'assets/icons/moon-eclipse.svg',
             value: context.watch<ThemeProvider>().isDarkMode,
             onChanged: (value) {
               context.read<ThemeProvider>().toggleTheme();
@@ -188,9 +202,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // المساعدة
           _buildMenuItem(
             title: 'المساعدة',
-            icon: Icons.help_outline,
+            iconPath: 'assets/icons/help-circle.svg',
             onTap: () {
-              // TODO: Navigate to help
+              showHelpBottomSheet(context);
             },
           ),
 
@@ -199,9 +213,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // الوصف
           _buildMenuItem(
             title: 'الوصف',
-            icon: Icons.info_outline,
+            iconPath: 'assets/icons/information-circle.svg',
             onTap: () {
-              // TODO: Navigate to about
+              showAboutBottomSheet(context);
             },
           ),
 
@@ -210,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // تسجيل خروج
           _buildMenuItem(
             title: 'تسجيل خروج',
-            icon: Icons.logout,
+            iconPath: 'assets/icons/logout-05.svg',
             onTap: () {
               _showLogoutDialog();
             },
@@ -223,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildMenuItem({
     required String title,
-    required IconData icon,
+    required String iconPath,
     required VoidCallback onTap,
     bool isLogout = false,
   }) {
@@ -234,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // السهم
+            // السهم - Material Icon
             Icon(
               Icons.arrow_back_ios,
               size: 18,
@@ -253,16 +267,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fontWeight: FontWeight.w600,
                       color: isLogout 
                           ? Colors.red.shade600 
-                          : Theme.of(context).textTheme.bodyLarge?.color, // 👈 Theme
+                          : Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Icon(
-                    icon,
-                    size: 24,
-                    color: isLogout
-                        ? Colors.red.shade600
-                        : const Color(0xFF379777),
+                  // أيقونة SVG للـ menu item
+                  SvgPicture.asset(
+                    iconPath,
+                    width: 24,
+                    height: 24,
+                    colorFilter: ColorFilter.mode(
+                      isLogout
+                          ? Colors.red.shade600
+                          : const Color(0xFF379777),
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ],
               ),
@@ -275,7 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildToggleMenuItem({
     required String title,
-    required IconData icon,
+    required String iconPath,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
@@ -304,14 +323,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).textTheme.bodyLarge?.color, // 👈 Theme
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Icon(
-                    icon,
-                    size: 24,
-                    color: const Color(0xFF379777),
+                  // أيقونة SVG للـ menu item
+                  SvgPicture.asset(
+                    iconPath,
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF379777),
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ],
               ),
@@ -335,7 +359,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           backgroundColor: Colors.transparent,
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).cardColor, // 👈 Theme
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -350,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const SizedBox(height: 24),
                 
-                // الأيقونة
+                // الأيقونة - Material Icon
                 Container(
                   width: 60,
                   height: 60,
@@ -373,7 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color, // 👈 Theme
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 
@@ -435,7 +459,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       border: Border(
                         top: BorderSide(
-                          color: isDark ? Colors.grey.shade800 : Colors.grey.shade200, // 👈 Theme
+                          color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
                           width: 1,
                         ),
                       ),
@@ -470,7 +494,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           backgroundColor: Colors.transparent,
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).cardColor, // 👈 Theme
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -485,7 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 const SizedBox(height: 24),
                 
-                // أيقونة التحذير
+                // أيقونة التحذير - Material Icon
                 Container(
                   width: 60,
                   height: 60,
@@ -508,7 +532,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color, // 👈 Theme
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
                 
@@ -609,7 +633,7 @@ class _AnimatedCardState extends State<_AnimatedCard> {
         child: Container(
           margin: widget.margin,
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor, // 👈 Theme
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
