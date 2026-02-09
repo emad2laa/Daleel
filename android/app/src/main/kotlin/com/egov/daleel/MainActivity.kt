@@ -1,4 +1,4 @@
-package com.example.daleel
+package com.egov.daleel
 
 import io.flutter.embedding.android.FlutterActivity
 
